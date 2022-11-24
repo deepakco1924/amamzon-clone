@@ -3,7 +3,7 @@ import "./Product.css";
 import { useStateValue } from "./StateProvider";
 function Product({ title, image, price, rating, id }) {
   const [state, disptach] = useStateValue();
-  console.log(state.basket);
+
   const addToBasket = () => {
     //disptach the item into data layer
     disptach({
