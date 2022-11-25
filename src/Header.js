@@ -8,7 +8,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "./Firebase";
 function Header() {
   const [{ basket, user }, disptach] = useStateValue();
-  console.log(user);
+
   const handleAuthintication = (e) => {
     if (user) {
       signOut(auth)
@@ -43,7 +43,7 @@ function Header() {
               className="header__optionLineOne"
               onClick={handleAuthintication}
             >
-              hello Guest
+              Hello {!user ? "Guest" : user.email}
             </span>
             <span className="header__optionTwo">
               {user ? "Sign Out" : "Sign In"}
