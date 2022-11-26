@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import "./Payment.css";
 import { useStateValue } from "./StateProvider";
 import CheckoutProduct from "./CheckoutProduct";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useHistory, useNavigate } from "react-router-dom";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import CurrencyFormat from "react-currency-format";
 import { getBasketTotal } from "./reducer";
 import axios from "./axios";
+import { db } from "./Firebase";
+import { addDoc, collection, doc } from "firebase/firestore";
 
 function Payment() {
   const [{ basket, user }, dispatch] = useStateValue();
@@ -23,21 +25,20 @@ function Payment() {
 
   useEffect(() => {
     // generate the special stripe secret which allows us to charge a customer
+    console.log("we are here");
     const getClientSecret = async () => {
       const response = await axios({
         method: "post",
         // Stripe expects the total in a currencies subunits
         url: `/payments/create?total=${getBasketTotal(basket) * 100}`,
       });
-      setClientSecret(response.data.clientSecret);
+      console.log("we have data here", response);
+      setClientSecret(response.data.client_secret);
     };
 
     getClientSecret();
   }, [basket]);
-
-  console.log("THE SECRET IS >>>", clientSecret);
-  console.log("👱", user);
-
+  console.log("we have cleinetsecret", clientSecret);
   const handleSubmit = async (event) => {
     // do all the fancy stripe stuff...
     event.preventDefault();
@@ -51,10 +52,32 @@ function Payment() {
       })
       .then(({ paymentIntent }) => {
         // paymentIntent = payment confirmation
+        console.log(paymentIntent);
+        const addPaymentInfoToDB = async () => {
+          try {
+            const response = await addDoc(
+              collection(db, "users", user?.uid, "orders"),
+              {
+                basket: basket,
+                id: paymentIntent.id,
+                amount: paymentIntent.amount,
+                created: paymentIntent.created,
+                status: paymentIntent.status,
+              }
+            );
+            console.log(response);
+
+            // console.log("Document written with ID: ", response.id);
+          } catch (e) {
+            console.error("Error adding document: ", e);
+          }
+        };
+        addPaymentInfoToDB();
 
         setSucceeded(true);
         setError(null);
         setProcessing(false);
+
         dispatch({
           type: "EMPTY_BASKET",
         });
