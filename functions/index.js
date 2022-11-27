@@ -25,29 +25,32 @@ app.get("/deepakpalccet", (request, response) =>
   })
 );
 
-app.post("/payments/create", async (request, response) => {
+app.post("/payments/create", (request, response) => {
   const total = request.query.total;
 
   console.log("Payment Request Recieved BOOM!!! for this amount >>> ", total);
 
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: total,
-    currency: "usd",
-    shipping: {
-      name: "Jenny Rosen",
-      address: {
-        line1: "510 Townsend St",
-        postal_code: "98140",
-        city: "San Francisco",
-        state: "CA",
-        country: "US",
+  stripe.paymentIntents
+    .create({
+      amount: total,
+      currency: "usd",
+      shipping: {
+        name: "Jenny Rosen",
+        address: {
+          line1: "510 Townsend St",
+          postal_code: "98140",
+          city: "San Francisco",
+          state: "CA",
+          country: "US",
+        },
       },
-    },
-    payment_method_types: ["card"],
-    description: "Software development services ",
-  });
+      payment_method_types: ["card"],
+      description: "Software development services ",
+    })
+    .then((paymentIntent) => {
+      response.status(201).send({ client_secret: paymentIntent.client_secret });
+    });
   // OK - Created
-  response.status(201).send({ client_secret: paymentIntent.client_secret });
 });
 
 // - Listen command
